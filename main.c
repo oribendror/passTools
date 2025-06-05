@@ -50,17 +50,18 @@ int main(int argc, char* argv[]){
 
     for(int i=1; i<argc; i++){
         if(commandToCode(argv[1]) == GENERATE_CODE){
+            char **
             int genSuccess = generatePaswd();
             if(!genSuccess){
                 printf("no matching passwords found, please try a different regex \n");
                 return 0;
             }
             printf("matching passwords found: \n");
-            printStrArr(generatePaswd, 5);
+            printStrArr(generated, 5);
             return 1;
         }
         if(commandToCode(argv[1]) == PARTIAL_CODE){
-            matchPartPaswd();
+            int matchSuccess = matchPartPaswd();
         }
         if(commandToCode(argv[1]) == STRENGTHEN_CODE){
             stregthePaswd();
@@ -95,9 +96,9 @@ int commandToCode(char command[]){
     return 0;
 }
 
-int generatePaswd(char paswd_regex[], char WORDLIST[]){
-    char *generatedPaswd[] = malloc(5 * sizeof(char *));
-    initStrArr(generatedPaswd, 5);
+int generatePaswd(char ***generatedPaswd,char paswd_regex[], char WORDLIST[]){
+    *generatedPaswd = malloc(5 * sizeof(char *));
+    initStrArr(*generatedPaswd, 5);
     int j=0;
     FILE *wordlist = fopen(WORDLIST, "r");
     int consistent = 1;
@@ -113,7 +114,7 @@ int generatePaswd(char paswd_regex[], char WORDLIST[]){
             }
         }
         if(consistent){
-            strcpy(generatedPaswd[j], paswd);
+            strcpy(*generatedPaswd[j], paswd);
             j++;
             if(j == 5){
                 return 1;
@@ -124,11 +125,11 @@ int generatePaswd(char paswd_regex[], char WORDLIST[]){
     if(j > 0){
         return 1;
     }
-    free(generatedPaswd);
+    free(*generatedPaswd);
     return 0;
 }
 
-int matchPartPaswd(char partPaswd[], char WORDLIST){
+int matchPartPaswd(char partPaswd[], char WORDLIST[]){
     int prefix = 1;
     int suffix = 1;
     int sequence;
@@ -171,7 +172,7 @@ int matchPartPaswd(char partPaswd[], char WORDLIST){
     
 }
 
-int strengthenPaswd(){
+int strengthenPaswd(char currPaswd[], char WORDLIST[]){
     
 }
 
