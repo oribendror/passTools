@@ -1,8 +1,13 @@
 #include <stdio.h>;
 #include <stdlib.h>;
-#include <stdio.h>;
 #include <string.h>;
 #include <ctype.h>;
+
+typedef struct strnC{
+    char str[128];
+    int num;
+};
+
 
 int main(int argc, char* argv[]){
     
@@ -134,52 +139,98 @@ int generatePaswd(char ***generatedPaswd,char paswd_regex[], char WORDLIST[]){
     return 0;
 }
 
-int matchPartPaswd(char partPaswd[], char WORDLIST[]){
-    int prefix = 1;
-    int suffix = 1;
-    int sequence;
-    int scattered = 1;
-    char matchedPaswd[]; 
+int* matchPartPaswd(char partPaswd[], char WORDLIST[]){
+    struct strnC *paswdnCode;
+    initStrnCArr(&paswdnCode)
 
-    int k=0;
-    int found = 0;
-
+    char ** matchedPaswd[]; 
+    int typeCodes[5] = {0};
+    int codeIndex = 0;
+    int code;
     FILE *wordlist = fopen(WORDLIST, "r");
     char paswd[128];
 
-    while (fgets(paswd, sizeof(paswd), wordlist)){
-        for(int i=0; i<sizeof(partPaswd), i++){
-            if(paswd[i] != partPaswd[i]){
-                prefix = 0;
-            }
-            if(paswd[sizeof(paswd) - i] != partPaswd[sizeof(partPaswd) - i]){
-                suffix = 0;
-            }
-            for(int j=0; j<sizeof(paswd); j++){
-                if(paswd[j] == partPaswd[i] && j > k){
-                    found = 1;
-                    k = j;
-                    break;
-                }
-            }
-            if(found == 0){
-                scattered = 0;
-                return 0;
-            }
+    while (fgets(paswd, sizeof(paswd), wordlist) && codeIndex < 5){
+        code = codeForPaswd(paswd, partPaswd);
+        if(!code){
+            continue;
         }
-        sequence = isSubstr(char paswd[], char partPaswd[]);
-        if(prefix){return 1};
-        if(suffix){return 2};
-        if(sequence){return 3};
-        if(scattered){return 4};
-        return 0;
+        typeCodes[codeIndex].num = code;
+        strcpy(typeCodes[codeIndex].str, paswd);
+        if(code == 1){
+            typeCodes[codeIndex] = 1;
+            codeIndex++;
+            continue;
+        }
+        if(code == 2){
+            typeCodes[codeIndex] = 1;
+            codeIndex++;
+            continue;
+        }
+        if(code == 3){
+            typeCodes[codeIndex] = 1;
+            codeIndex++;
+            continue;
+        }
+        if(code == 4){
+            typeCodes[codeIndex] = 1;
+            codeIndex++;
+            continue;
+        }
     }
     
 }
 
-int strengthenPaswd(char currPaswd[], char WORDLIST[]){
+int codeForPaswd(char paswd[], char partPaswd[]){
+    int prefix = 1;
+    int suffix = 1;
+    int sequence;
+    int scattered = 1;
+
+    int k=0;
+    int found = 0;
     
+    for(int i=0; i<sizeof(partPaswd), i++){
+        if(paswd[i] != partPaswd[i]){
+            prefix = 0;
+        }
+        if(paswd[sizeof(paswd) - i] != partPaswd[sizeof(partPaswd) - i]){
+            suffix = 0;
+        }
+        for(int j=0; j<sizeof(paswd); j++){
+            if(paswd[j] == partPaswd[i] && j > k){
+                found = 1;
+                k = j;
+                break;
+            }
+        }
+        if(!found){
+            return 0;
+        }
+    }
+    sequence = isSubstr(char paswd[], char partPaswd[]);
+    
+    if(!prefix && !suffix && !sequence && !scattered){
+        return 0;
+    }
+
+    if(prefix){
+        return 1;
+    }
+    if(suffix){
+        return 2;
+    }
+    if(sequence){
+        return 3;
+    }
+    if(scattered){
+        return 4;
+    }
 }
+
+/*int strengthenPaswd(char currPaswd[], char WORDLIST[]){
+    
+}*/
 
 int regex_compare(char regex[], char str[]){
     for(int i=0; i<sizeof(regex); i++){
@@ -230,5 +281,12 @@ void freeStrArr(char *strArr[], int numStrings){
 void printStrArr(char *strArr[], int numStrings){
     for(int i=0; i<numStrings; i++){
         printf("%s\n", strArr[i])
+    }
+}
+
+void initStrnCArr(struct strnC arr[], int size){
+    for(int i=0; i<size; i++){
+        arr[i].num = 0;
+        strcpy(arr[i].str, "");
     }
 }
