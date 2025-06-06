@@ -11,8 +11,7 @@ typedef struct{
 int isIn(int *, int ,int);
 int commandToCode(char *);
 int generatePaswd(char ***,char *, const char *);
-int* matchPartPaswd(char *, const char *);
-int codeForPaswd(char *, char *);
+strnC* matchPartPaswd(char *, const char *);
 int regex_compare(char *, char *);
 int isSubstr(char *, char *);
 void initStrArr(char **, int);
@@ -32,7 +31,7 @@ int main(int argc, char* argv[]) {
         printf("Error: expected 1 command and possibly a password\n");
         return 0;
     }
-
+    int codeForPaswd(char *, char *);
     if (argc < 2) {
         printf("Error: must pass command from {--help/-h, --generate/-g, --partial/-p, --strengthen/-s} and a password\n");
         return 0;
@@ -78,26 +77,36 @@ int main(int argc, char* argv[]) {
 
     // Handle partial match mode
     if (command == PARTIAL_CODE) {
-        char *full = "yourRealPasswordHere"; // You may want to ask user or hardcode for now
         char *part = argv[2];
-        int result = codeForPaswd(full, part);
+        strnC *matches = matchPartPaswd(part, WORDLIST);
+        int type = matches[0].num;
+        char *paswd;
+        int i=0;
+        while (type != 0 && i < 10)
+        {
+            paswd = matches[i].str;
 
-        switch (result) {
-            case 1:
-                printf("Match type: prefix\n");
-                break;
-            case 2:
-                printf("Match type: suffix\n");
-                break;
-            case 3:
-                printf("Match type: substring\n");
-                break;
-            case 4:
-                printf("Match type: scattered subsequence\n");
-                break;
-            default:
-                printf("No match found\n");
+            switch (type) {
+                case 1:
+                    printf("%s, matchType: prefix \n", paswd);
+                    break;
+                case 2:
+                    printf("%s, matchType: suffix \n", paswd);
+                    break;
+                case 3:
+                    printf("%s, matchType: substring \n", paswd);
+                    break;
+                case 4:
+                    printf("%s, matchType: scattered subsequence \n", paswd);
+                    break;
+                default:
+                    printf("No match found\n");
+            }
+
+            i++;
+            type = matches[i].num;
         }
+        
         return 1;
     }
 
@@ -124,9 +133,6 @@ int commandToCode(char command[]){
     }
     if(!strcmp(command, "--partial") || !strcmp(command, "-p")){
         return 3;
-    }
-    if(!strcmp(command, "--strengthen") || !strcmp(command, "-s")){
-        return 4;
     }
     return 0;
 }
@@ -166,132 +172,6 @@ int generatePaswd(char ***generatedPaswd,char paswd_regex[], const char WORDLIST
     return 0;
 }
 
-int* matchPartPaswd(char partPaswd[], const char WORDLIST[]) {
-    strnC *matches = malloc(10 * sizeof(strnC));
-    int total = 0;
-
-    FILE *wordlist = fopen(WORDLIST, "r");
-    if (!wordlist) {
-        printf("Error: wordlist not found\n");
-        return NULL;
-    }
-
-    char paswd[128];
-
-    // Pass 1: Prefixes
-    rewind(wordlist);
-    while (fgets(paswd, sizeof(paswd), wordlist) && total < 10) {
-        paswd[strcspn(paswd, "\n")] = '\0';
-        if (codeForPaswd(paswd, partPaswd) == 1) {
-            strcpy(matches[total++].str, paswd);
-        }
-    }
-
-    // Pass 2: Suffixes
-    rewind(wordlist);
-    while (fgets(paswd, sizeof(paswd), wordlist) && total < 10) {
-        paswd[strcspn(paswd, "\n")] = '\0';
-        if (codeForPaswd(paswd, partPaswd) == 2) {
-            strcpy(matches[total++].str, paswd);
-        }
-    }
-
-    // Pass 3: Sequences
-    rewind(wordlist);
-    while (fgets(paswd, sizeof(paswd), wordlist) && total < 10) {
-        paswd[strcspn(paswd, "\n")] = '\0';
-        if (codeForPaswd(paswd, partPaswd) == 3) {
-            strcpy(matches[total++].str, paswd);
-        }
-    }
-
-    // Pass 4: Scattered
-    rewind(wordlist);
-    while (fgets(paswd, sizeof(paswd), wordlist) && total < 10) {
-        paswd[strcspn(paswd, "\n")] = '\0';
-        if (codeForPaswd(paswd, partPaswd) == 4) {
-            strcpy(matches[total++].str, paswd);
-        }
-    }
-
-    fclose(wordlist);
-
-    // Print result (for testing)
-    for (int i = 0; i < total; i++)
-        printf("Match %d: %s\n", i + 1, matches[i].str);
-
-    // Return if needed — or pass back in another form
-    free(matches); // remove this line if returning matches
-
-    return NULL;
-}
-
-
-
-int codeForPaswd(char paswd[], char partPaswd[]){
-    int prefix = 1;
-    int suffix = 1;
-    int sequence;
-    int scattered = 1;
-
-    int k = -1; // last matched index for scattered
-    int found;
-
-    int lenPaswd = strlen(paswd);
-    int lenPart = strlen(partPaswd);
-
-    // Check prefix and suffix
-    for(int i = 0; i < lenPart; i++){
-        // prefix check
-        if(paswd[i] != partPaswd[i]){
-            prefix = 0;
-        }
-
-        // suffix check
-        if(paswd[lenPaswd - 1 - i] != partPaswd[lenPart - 1 - i]){
-            suffix = 0;
-        }
-    }
-
-    // Check scattered subsequence
-    for(int i = 0; i < lenPart; i++){
-        found = 0;
-        for(int j = k + 1; j < lenPaswd; j++){
-            if(paswd[j] == partPaswd[i]){
-                found = 1;
-                k = j;
-                break;
-            }
-        }
-        if(!found){
-            scattered = 0;
-            break;
-        }
-    }
-
-    sequence = isSubstr(paswd, partPaswd);
-
-    if(!prefix && !suffix && !sequence && !scattered){
-        return 0;
-    }
-    if(prefix){
-        return 1;
-    }
-    if(suffix){
-        return 2;
-    }
-    if(sequence){
-        return 3;
-    }
-    if(scattered){
-        return 4;
-    }
-
-    return 0; // fallback (should not get here)
-}
-
-
-
 int regex_compare(char regex[], char str[]){
     for(int i=0; i<strlen(regex); i++){
         if(regex[i] == '*' && !isalpha(str[i])){
@@ -310,7 +190,108 @@ int regex_compare(char regex[], char str[]){
     return 1;
 }
 
-int isSubstr(char str[], char part[]){
+strnC* matchPartPaswd(char partPaswd[], const char WORDLIST[]) {
+    strnC *matches = malloc(10 * sizeof(strnC));
+    initStrnCArr(matches, 10);
+    int total = 0;
+
+    FILE *wordlist = fopen(WORDLIST, "r");
+    if (!wordlist) {
+        printf("Error: wordlist not found\n");
+        return NULL;
+    }
+
+    char paswd[128];
+
+    // Pass 1: Prefixes
+    rewind(wordlist);
+    while (fgets(paswd, sizeof(paswd), wordlist) && total < 10) {
+        paswd[strcspn(paswd, "\n")] = '\0';
+        if (checkPrefix(paswd, partPaswd)) {
+            strcpy(matches[total].str, paswd);
+            matches[total].num = 1;
+            total++;
+        }
+    }
+
+    // Pass 2: Suffixes
+    rewind(wordlist);
+    while (fgets(paswd, sizeof(paswd), wordlist) && total < 10) {
+        paswd[strcspn(paswd, "\n")] = '\0';
+        if (checkSuffix(paswd, partPaswd)) {
+            strcpy(matches[total].str, paswd);
+            matches[total].num = 2;
+            total++;
+        }
+    }
+
+    // Pass 3: Sequences
+    rewind(wordlist);
+    while (fgets(paswd, sizeof(paswd), wordlist) && total < 10) {
+        paswd[strcspn(paswd, "\n")] = '\0';
+        if (checkSubstr(paswd, partPaswd)) {
+            strcpy(matches[total].str, paswd);
+            matches[total].num = 3;
+            total++;
+        }
+    }
+
+    // Pass 4: Scattered
+    rewind(wordlist);
+    while (fgets(paswd, sizeof(paswd), wordlist) && total < 10) {
+        paswd[strcspn(paswd, "\n")] = '\0';
+        if (checkScattered(paswd, partPaswd)) {
+            strcpy(matches[total].str, paswd);
+            matches[total].num = 4;
+            total++;
+        }
+    }
+
+    fclose(wordlist);
+
+    return matches;
+}
+
+int checkPrefix(char paswd[], char partPaswd[]){
+    for(int i = 0; i < strlen(partPaswd); i++){
+        // prefix check
+        if(paswd[i] != partPaswd[i]){
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int checkSuffix(char paswd[], char partPaswd[]){
+    for(int i = 0; i < strlen(partPaswd); i++){
+        // suffix check
+        if(paswd[strlen(paswd) - 1 - i] != partPaswd[strlen(partPaswd) - 1 - i]){
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int checkScattered(char paswd[], char partPaswd[]){
+    int found;
+    int k = -1;
+    for(int i = 0; i < strlen(partPaswd); i++){
+        found = 0;
+        for(int j = k + 1; j < strlen(paswd); j++){
+            if(paswd[j] == partPaswd[i]){
+                found = 1;
+                k = j;
+                break;
+            }
+        }
+        if(!found){
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int checkSubstr(char str[], char part[]){
     int lenStr = strlen(str);
     int lenPart = strlen(part);
 
