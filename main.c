@@ -13,7 +13,10 @@ int commandToCode(char *);
 int generatePaswd(char ***,char *, const char *);
 strnC* matchPartPaswd(char *, const char *);
 int regex_compare(char *, char *);
-int isSubstr(char *, char *);
+int checkPrefix(char *, char *);
+int checkSuffix(char *, char *);
+int checkScattered(char *, char *);
+int checkSubstr(char *, char *);
 void initStrArr(char **, int);
 void freeStrArr(char **, int);
 void printStrArr(char **, int);
@@ -79,36 +82,41 @@ int main(int argc, char* argv[]) {
     if (command == PARTIAL_CODE) {
         char *part = argv[2];
         strnC *matches = matchPartPaswd(part, WORDLIST);
-        int type = matches[0].num;
         char *paswd;
-        int i=0;
-        while (type != 0 && i < 10)
-        {
-            paswd = matches[i].str;
-
+        int i = 0;
+    
+        // Count up to 10 matches or until a 0-type is found
+        while (i < 10 && matches[i].num != 0) {
+            i++;
+        }
+    
+        printf("%d matches found\n", i);
+    
+        for (int j = 0; j < i; j++) {
+            paswd = matches[j].str;
+            int type = matches[j].num;
+    
             switch (type) {
                 case 1:
-                    printf("%s, matchType: prefix \n", paswd);
+                    printf("%s, matchType: prefix\n", paswd);
                     break;
                 case 2:
-                    printf("%s, matchType: suffix \n", paswd);
+                    printf("%s, matchType: suffix\n", paswd);
                     break;
                 case 3:
-                    printf("%s, matchType: substring \n", paswd);
+                    printf("%s, matchType: substring\n", paswd);
                     break;
                 case 4:
-                    printf("%s, matchType: scattered subsequence \n", paswd);
+                    printf("%s, matchType: scattered subsequence\n", paswd);
                     break;
                 default:
-                    printf("No match found\n");
+                    printf("%s, matchType: unknown (%d)\n", paswd, type);
             }
-
-            i++;
-            type = matches[i].num;
         }
-        
+    
         return 1;
     }
+    
 
     printf("Did not recognize any valid flags\n");
     return 1;
