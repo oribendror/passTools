@@ -39,6 +39,11 @@ int main(int argc, char* argv[]){
         }
     }
 
+    if(argc < 3){
+        printf("Error: for commands other than --help, must provide password \n");
+        return 0;
+    }
+
     int codesFound[3] = {0};
 
     for(int i=1; i<argc; i++){
@@ -50,14 +55,14 @@ int main(int argc, char* argv[]){
 
     for(int i=1; i<argc; i++){
         if(commandToCode(argv[1]) == GENERATE_CODE){
-            char **
-            int genSuccess = generatePaswd();
+            char ** generatedPaswd = NULL;
+            int genSuccess = generatePaswd(&generatedPaswd, argv[argc - 1], WORDLIST);
             if(!genSuccess){
                 printf("no matching passwords found, please try a different regex \n");
                 return 0;
             }
             printf("matching passwords found: \n");
-            printStrArr(generated, 5);
+            printStrArr(generatedPaswd, 5);
             return 1;
         }
         if(commandToCode(argv[1]) == PARTIAL_CODE){
