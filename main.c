@@ -3,21 +3,22 @@
 #include <string.h>
 #include <ctype.h>
 
-typedef struct strnC{
+typedef struct{
     char str[128];
     int num;
-};
+}strnC;
 
 int isIn(int *, int ,int);
 int commandToCode(char *);
 int generatePaswd(char ***,char *, const char *);
 int* matchPartPaswd(char *, const char *);
+int codeForPaswd(char *, char *);
 int regex_compare(char *, char *);
 int isSubstr(char *, char *);
 void initStrArr(char **, int);
 void freeStrArr(char **, int);
 void printStrArr(char **, int);
-void initStrnCArr(struct strnC *, int);
+void initStrnCArr(strnC *, int);
 
 
 int main(int argc, char* argv[]) {
@@ -166,7 +167,7 @@ int generatePaswd(char ***generatedPaswd,char paswd_regex[], const char WORDLIST
 }
 
 int* matchPartPaswd(char partPaswd[], const char WORDLIST[]) {
-    struct strnC *matches = malloc(10 * sizeof(struct strnC));
+    strnC *matches = malloc(10 * sizeof(strnC));
     int total = 0;
 
     FILE *wordlist = fopen(WORDLIST, "r");
@@ -349,7 +350,7 @@ void printStrArr(char *strArr[], int numStrings){
     }
 }
 
-void initStrnCArr(struct strnC arr[], int size){
+void initStrnCArr(strnC arr[], int size){
     for(int i=0; i<size; i++){
         arr[i].num = 0;
         strcpy(arr[i].str, "");
