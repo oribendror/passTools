@@ -25,7 +25,7 @@ int main(int argc, char* argv[]){
     static const int GENERATE_CODE = 2;
     static const int PARTIAL_CODE = 3;
     static const int STRENGTHEN_CODE = 4;
-    static const char WORDLIST[] = "home/oribd/Documents/wordlists/rockyou.txt";
+    static const char WORDLIST[] = "/home/oribd/Documents/wordlists/rockyou.txt";
 
     if(argc > 3){
         printf("Error: expected 1 command and a possibly a password \n");
@@ -75,9 +75,10 @@ int main(int argc, char* argv[]){
 
     for(int i=1; i<argc; i++){
         if(commandToCode(argv[1]) == GENERATE_CODE){
-            printf("recognized the flag");
+            /*printf("recognized the flag \n");*/
             char ** generatedPaswd = NULL;
             int genSuccess = generatePaswd(&generatedPaswd, argv[argc - 1], WORDLIST);
+            /*printf("got past the function call \n");*/
             if(!genSuccess){
                 printf("no matching passwords found, please try a different regex \n");
                 return 0;
@@ -99,7 +100,7 @@ int main(int argc, char* argv[]){
         */
     }
 
-    printf("did not recognize any flags");
+    printf("did not recognize any flags \n");
     
     return 1;
 }
@@ -117,7 +118,7 @@ int commandToCode(char command[]){
     if(!strcmp(command, "--help") || !strcmp(command, "-h")){
         return 1;
     }
-    if(!strcmp(command, "--crack") || !strcmp(command, "-c")){
+    if(!strcmp(command, "--generate") || !strcmp(command, "-g")){
         return 2;
     }
     if(!strcmp(command, "--partial") || !strcmp(command, "-p")){
@@ -134,20 +135,25 @@ int generatePaswd(char ***generatedPaswd,char paswd_regex[], const char WORDLIST
     initStrArr(*generatedPaswd, 5);
     int j=0;
     FILE *wordlist = fopen(WORDLIST, "r");
+
+    if(wordlist == NULL){
+        printf("Wordlist not found \n");
+        return 0;
+    }
+
     int consistent = 1;
     char paswd[128];
     while(fgets(paswd, sizeof(paswd), wordlist)){
+        paswd[strcspn(paswd, "\n")] = '\0';  // removes trailing newline if any
         if(strlen(paswd)!=strlen(paswd_regex)){
             continue;
         }
-        for(int i=0; i<strlen(paswd_regex); i++){
-            if(!regex_compare(paswd_regex, paswd)){
-                consistent = 0;
-                break;
-            }
+        if(!regex_compare(paswd_regex, paswd)){
+            consistent = 0;
+            continue;
         }
         if(consistent){
-            strcpy(*generatedPaswd[j], paswd);
+            strcpy((*generatedPaswd)[j], paswd);
             j++;
             if(j == 5){
                 return 1;
@@ -176,6 +182,7 @@ int* matchPartPaswd(char partPaswd[], const char WORDLIST[]){
     char paswd[128];
 
     while (fgets(paswd, sizeof(paswd), wordlist) && codeIndex < 5){
+        paswd[strcspn(paswd, "\n")] = '\0';  // removes trailing newline if any
         code = codeForPaswd(paswd, partPaswd);
         if(!code){
             continue;
