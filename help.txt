@@ -8,8 +8,8 @@ commands:
                       * - generic letter 
 		    , # - generic number
 		    , @ - generic special character
+                      <space> - any character
 		      specific numbers and letters are allowed as well.
 		      specific special characters aren't allowed. 
 	--partial/-p finds matches between given partial password and database
-	--strengthen/-s suggests stronger alternatives for the password
 	--help/-h displays this help message
