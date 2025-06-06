@@ -36,22 +36,20 @@ int main(int argc, char* argv[]){
         return 0;
     }
 
-    for(int i=1; i<argc; i++){
-        if(commandToCode(argv[i]) == HELP_CODE){
-            FILE *helpFile = fopen("help.txt", "r");
+    if(commandToCode(argv[1]) == HELP_CODE){
+        FILE *helpFile = fopen("help.txt", "r");
             
-            if(helpFile == NULL){
-                printf("Error: help message not found \n");
-                return 0;
-            }
-
-            char line[128];
-            
-            while(fgets(line, sizeof(line),helpFile)){
-                printf("%s", line);
-            }
-            return 1;
+        if(helpFile == NULL){
+            printf("Error: help message not found \n");
+            return 0;
         }
+
+        char line[128];
+            
+        while(fgets(line, sizeof(line),helpFile)){
+            printf("%s", line);
+        }
+        return 1;
     }
 
     if(argc < 3){
@@ -73,32 +71,30 @@ int main(int argc, char* argv[]){
     }
 
 
-    for(int i=1; i<argc; i++){
-        if(commandToCode(argv[1]) == GENERATE_CODE){
-            /*printf("recognized the flag \n");*/
-            char ** generatedPaswd = NULL;
-            int genSuccess = generatePaswd(&generatedPaswd, argv[argc - 1], WORDLIST);
-            /*printf("got past the function call \n");*/
-            if(!genSuccess){
-                printf("no matching passwords found, please try a different regex \n");
-                return 0;
-            }
-            printf("matching passwords found: \n");
-            printStrArr(generatedPaswd, 5);
-            freeStrArr(generatedPaswd, 5);
-            free(generatedPaswd);
-            return 1;
+    if(commandToCode(argv[1]) == GENERATE_CODE){
+        /*printf("recognized the flag \n");*/
+        char ** generatedPaswd = NULL;
+        int genAmount = generatePaswd(&generatedPaswd, argv[2], WORDLIST);
+        /*printf("got past the function call \n");*/
+        if(!genAmount){
+        printf("no matching passwords found, please try a different regex \n");
+            return 0;
         }
-
-        /*
-        if(commandToCode(argv[1]) == PARTIAL_CODE){
-            int matchSuccess = matchPartPaswd();
-        }
-        if(commandToCode(argv[1]) == STRENGTHEN_CODE){
-            stregthePaswd();
-        }
-        */
+        printf("matching passwords found: \n");
+        printStrArr(generatedPaswd, genAmount);
+        freeStrArr(generatedPaswd, genAmount);
+        free(generatedPaswd);
+        return 1;
     }
+
+    /*
+    if(commandToCode(argv[1]) == PARTIAL_CODE){
+        int matchSuccess = matchPartPaswd();
+    }
+    if(commandToCode(argv[1]) == STRENGTHEN_CODE){
+        stregthePaswd();
+    }
+    */
 
     printf("did not recognize any flags \n");
     
@@ -141,7 +137,6 @@ int generatePaswd(char ***generatedPaswd,char paswd_regex[], const char WORDLIST
         return 0;
     }
 
-    int consistent = 1;
     char paswd[128];
     while(fgets(paswd, sizeof(paswd), wordlist)){
         paswd[strcspn(paswd, "\n")] = '\0';  // removes trailing newline if any
@@ -149,20 +144,17 @@ int generatePaswd(char ***generatedPaswd,char paswd_regex[], const char WORDLIST
             continue;
         }
         if(!regex_compare(paswd_regex, paswd)){
-            consistent = 0;
             continue;
         }
-        if(consistent){
-            strcpy((*generatedPaswd)[j], paswd);
-            j++;
-            if(j == 5){
-                return 1;
-            }
+
+        strcpy((*generatedPaswd)[j], paswd);
+        j++;
+        if(j == 5){
+            return j;
         }
-        consistent = 1;
     }
     if(j > 0){
-        return 1;
+        return j;
     }
     freeStrArr(*generatedPaswd, 5);
     free(*generatedPaswd);
