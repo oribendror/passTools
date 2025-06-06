@@ -1,7 +1,7 @@
-#include <stdio.h>;
-#include <stdlib.h>;
-#include <string.h>;
-#include <ctype.h>;
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 
 /*
 typedef struct strnC{
@@ -10,13 +10,22 @@ typedef struct strnC{
 };
 */
 
+int isIn(int *, int ,int);
+int commandToCode(char *);
+int generatePaswd(char ***,char *, const char *);
+int regex_compare(char *, char *);
+int isSubstr(char *, char *);
+void initStrArr(char **, int);
+void freeStrArr(char **, int);
+void printStrArr(char **, int);
+
 int main(int argc, char* argv[]){
     
     static const int HELP_CODE = 1;
     static const int GENERATE_CODE = 2;
     static const int PARTIAL_CODE = 3;
     static const int STRENGTHEN_CODE = 4;
-    static const char WORDLIST[] = "rockyou.txt";
+    static const char WORDLIST[] = "home/oribd/Documents/wordlists/rockyou.txt";
 
     if(argc > 3){
         printf("Error: expected 1 command and a possibly a password \n");
@@ -38,7 +47,7 @@ int main(int argc, char* argv[]){
 
             char line[128];
             
-            while(fgets(line, strlen(line),helpFile)){
+            while(fgets(line, sizeof(line),helpFile)){
                 printf("%s", line);
             }
             return 1;
@@ -52,15 +61,21 @@ int main(int argc, char* argv[]){
 
     int codesFound[3] = {0};
 
+    int codeCount = 0;
     for(int i=1; i<argc; i++){
-        if(strcmp(isIn(codesFound, commandToCode(argv[i]))), "1"){
+        int code = commandToCode(argv[i]);
+        if(code == 0) continue; // skip unknown commands or password arg
+        if(isIn(codesFound, codeCount, code)){
             printf("Error: duplicate commands aren't allowed \n");
             return 0;
         }
+        codesFound[codeCount++] = code;
     }
+
 
     for(int i=1; i<argc; i++){
         if(commandToCode(argv[1]) == GENERATE_CODE){
+            printf("recognized the flag");
             char ** generatedPaswd = NULL;
             int genSuccess = generatePaswd(&generatedPaswd, argv[argc - 1], WORDLIST);
             if(!genSuccess){
@@ -69,6 +84,8 @@ int main(int argc, char* argv[]){
             }
             printf("matching passwords found: \n");
             printStrArr(generatedPaswd, 5);
+            freeStrArr(generatedPaswd, 5);
+            free(generatedPaswd);
             return 1;
         }
 
@@ -81,11 +98,12 @@ int main(int argc, char* argv[]){
         }
         */
     }
+
+    printf("did not recognize any flags");
     
     return 1;
 }
 
-/*
 int isIn(int *array, int arrLen, int x){
     for(int i=0; i<arrLen; i++){
         if(array[i] == x){
@@ -94,32 +112,31 @@ int isIn(int *array, int arrLen, int x){
     }
     return 0;
 }
-*/
 
 int commandToCode(char command[]){
-    if(strcmp(command, "--help") || strcmp(command, "-h")){
+    if(!strcmp(command, "--help") || !strcmp(command, "-h")){
         return 1;
     }
-    if(strcmp(command, "--crack") || strcmp(command, "-c")){
+    if(!strcmp(command, "--crack") || !strcmp(command, "-c")){
         return 2;
     }
-    if(strcmp(command, "--partial") || strcmp(command, "-p")){
+    if(!strcmp(command, "--partial") || !strcmp(command, "-p")){
         return 3;
     }
-    if(strcmp(command, "--strengthen") || strcmp(command, "-s")){
+    if(!strcmp(command, "--strengthen") || !strcmp(command, "-s")){
         return 4;
     }
     return 0;
 }
 
-int generatePaswd(char ***generatedPaswd,char paswd_regex[], char WORDLIST[]){
+int generatePaswd(char ***generatedPaswd,char paswd_regex[], const char WORDLIST[]){
     *generatedPaswd = malloc(5 * sizeof(char *));
     initStrArr(*generatedPaswd, 5);
     int j=0;
     FILE *wordlist = fopen(WORDLIST, "r");
     int consistent = 1;
     char paswd[128];
-    while(fgets(paswd, strlen(paswd), wordlist)){
+    while(fgets(paswd, sizeof(paswd), wordlist)){
         if(strlen(paswd)!=strlen(paswd_regex)){
             continue;
         }
@@ -141,12 +158,13 @@ int generatePaswd(char ***generatedPaswd,char paswd_regex[], char WORDLIST[]){
     if(j > 0){
         return 1;
     }
+    freeStrArr(*generatedPaswd, 5);
     free(*generatedPaswd);
     return 0;
 }
 
 /*
-int* matchPartPaswd(char partPaswd[], char WORDLIST[]){
+int* matchPartPaswd(char partPaswd[], const char WORDLIST[]){
     struct strnC *paswdnCode;
     initStrnCArr(&paswdnCode)
 
@@ -157,7 +175,7 @@ int* matchPartPaswd(char partPaswd[], char WORDLIST[]){
     FILE *wordlist = fopen(WORDLIST, "r");
     char paswd[128];
 
-    while (fgets(paswd, strlen(paswd), wordlist) && codeIndex < 5){
+    while (fgets(paswd, sizeof(paswd), wordlist) && codeIndex < 5){
         code = codeForPaswd(paswd, partPaswd);
         if(!code){
             continue;
@@ -238,7 +256,7 @@ int codeForPaswd(char paswd[], char partPaswd[]){
 */
 
 /*
-int strengthenPaswd(char currPaswd[], char WORDLIST[]){
+int strengthenPaswd(char currPaswd[], const char WORDLIST[]){
     
 }
 */
@@ -265,7 +283,7 @@ int isSubstr(char str[], char part[]){
     for(int i=0; i<strlen(str); i++){
         int isSub = 1;
         for(int j=0; j<strlen(part); j++){
-            if(str[i] != part(j)){
+            if(str[i] != part[j]){
                 isSub = 0;
                 break;
             }
